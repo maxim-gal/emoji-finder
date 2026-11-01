@@ -117,3 +117,26 @@ body {
   text-align: center;
   color: #3f444a;
 }
+
+/* сообщение о загрузке, ошибке или пустом результате */
+.state-message {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px 20px;
+  font-size: 18px;
+  color: #3f444a;
+}
+
+.state-message.error {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+/* эффект при наведении на карточку */
+.card {
+  transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+  transform: scale(1.03);
+}

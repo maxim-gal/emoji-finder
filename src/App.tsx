@@ -1,36 +1,31 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getEmojis, type IEmojiItem } from './api/emojiApi';
 import './App.css';
 
-// Данные для карточек
-const emojis = [
-  {
-    symbol: '💯',
-    title: '100',
-    keywords: 'hundred points symbol wow win perfect parties',
-  },
-  {
-    symbol: '🔢',
-    title: '1234',
-    keywords: 'input symbol for numbers symbol',
-  },
-  {
-    symbol: '🅰️',
-    title: 'A',
-    keywords: 'blood type letter a uppercase red alphabet',
-  },
-];
-
 function App() {
+  const [emojis, setEmojis] = useState<IEmojiItem[]>([]);
   const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Фильтруем массив по введенному тексту
-  const visibleEmojis = emojis.filter((emoji) => {
-    const query = search.toLowerCase();
-    return (
-      emoji.title.toLowerCase().includes(query) ||
-      emoji.keywords.toLowerCase().includes(query)
-    );
-  });
+  // запрашиваем эмодзи при каждом изменении текста в поиске
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getEmojis(search);
+        setEmojis(data);
+      } catch {
+        // текст ошибки как в методичке
+        setError('Не удалось загрузить данные. Проверьте, запущен ли сервер (start.bat).');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [search]);
 
   return (
     <div className="app">
@@ -45,17 +40,43 @@ function App() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              style={{
+                position: 'absolute',
+                right: '30px',
+                top: '20px',
+                cursor: 'pointer',
+                background: 'none',
+                border: 'none',
+                fontSize: '20px',
+              }}
+            >
+              ✕
+            </button>
+          )}
         </div>
       </header>
 
       <main className="cards-grid">
-        {visibleEmojis.map((emoji) => (
-          <div key={emoji.title} className="card">
-            <div className="card-emoji">{emoji.symbol}</div>
-            <div className="card-title">{emoji.title}</div>
-            <div className="card-description">{emoji.keywords}</div>
-          </div>
-        ))}
+        {loading && <div className="state-message">Загрузка эмодзи...</div>}
+
+        {error && <div className="state-message error">{error}</div>}
+
+        {!loading && !error && emojis.length === 0 && (
+          <p className="state-message">Эмодзи не найдены</p>
+        )}
+
+        {!loading &&
+          !error &&
+          emojis.map((emoji, index) => (
+            <div key={index} className="card">
+              <div className="card-emoji">{emoji.emoji}</div>
+              <div className="card-title">{emoji.title}</div>
+              <div className="card-description">{emoji.keywords}</div>
+            </div>
+          ))}
       </main>
     </div>
   );
